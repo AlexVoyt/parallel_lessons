@@ -5,12 +5,14 @@
 #include <barrier>
 #include <type_traits>
 
+#include <new>
+
 /* Compile time assert macro */
 #define ASSERT_CONCAT_(a,b) a##b
 #define ASSERT_CONCAT(a,b) ASSERT_CONCAT_(a,b)
 #define ct_assert(e) enum {ASSERT_CONCAT(asssert_line_, __LINE__) = 1/(!!(e))}
 
-#if defined(__GNUC__) && __GNUC__ <= 10
+#if defined(__GNUC__)
 namespace std {
     constexpr std::size_t hardware_constructive_interference_size = 64u;
     constexpr std::size_t hardware_destructive_interference_size = 64u;

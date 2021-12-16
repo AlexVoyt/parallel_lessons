@@ -12,7 +12,9 @@ ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, Eleme
         alignas(std::hardware_destructive_interference_size) ElementType value;
     };
     static auto reduction_partial_results =
+
         std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(),
+        std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(), 
                                                 reduction_partial_result_t{zero});
     constexpr std::size_t k = 2;
     std::barrier<> bar {T};
