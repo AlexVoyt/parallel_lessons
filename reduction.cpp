@@ -6,12 +6,14 @@ std::size_t ceil_div(std::size_t x, std::size_t y)
 template <class ElementType, class BinaryFn>
 ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, ElementType zero)
 {
-    unsigned T = get_num_threads();
+    unsigned T = GetThreadCount();
     struct reduction_partial_result_t
     {
         alignas(std::hardware_destructive_interference_size) ElementType value;
     };
     static auto reduction_partial_results =
+
+        std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(),
         std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(), 
                                                 reduction_partial_result_t{zero});
     constexpr std::size_t k = 2;
@@ -68,6 +70,7 @@ ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, Eleme
 #include <type_traits>
 
 template <class ElementType, class UnaryFn, class BinaryFn>
+// TODO: make this compile on all compilers ?
 #if 0
 requires {
     std::is_invocable_r_v<UnaryFn, ElementType, ElementType> &&
@@ -76,7 +79,7 @@ requires {
 #endif
 ElementType reduce_range(ElementType a, ElementType b, std::size_t n, UnaryFn get, BinaryFn reduce_2, ElementType zero)
 {
-    unsigned T = get_num_threads();
+    unsigned T = GetThreadCount();
     struct reduction_partial_result_t
     {
         alignas(std::hardware_destructive_interference_size) ElementType value;
@@ -91,15 +94,15 @@ ElementType reduce_range(ElementType a, ElementType b, std::size_t n, UnaryFn ge
         auto K = ceil_div(n, k);
         double dx = (b - a) / n;
         std::size_t Mt = K / T;
-        std::size_t it1;
+        std::size_t it1 = K % T;
 
-        if(t < (K % T))
+        if(t < it1)
         {
             it1 = ++Mt * t;
         }
         else
         {
-            it1 = (K % T) * Mt + t;
+            it1 = Mt * t + it1;
         }
         it1 *= k;
         std::size_t mt = Mt * k;
@@ -130,10 +133,11 @@ ElementType reduce_range(ElementType a, ElementType b, std::size_t n, UnaryFn ge
 }
 
 // TODO: pull this to own header and invoke in file where we have RunExperiment function
-/*
-double integrate_reduction(double a, double b, function F)
+
+double IntegrateReduction(unary_function F, double a, double b)
 {
-    return reduce_range(a, b, STEPS, F, [](auto x, auto y){return x + y}, 0);
+    double dx = (b - a)/ STEPS;
+    return reduce_range(a, b, STEPS, F, [](auto x, auto y){return x + y;}, 0.0)*dx;
 }
-*/
+
 

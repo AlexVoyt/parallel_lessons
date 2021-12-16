@@ -55,7 +55,7 @@ double IntegratePS(function F, double a, double b)
 {
     double Result = 0;
     double dx = (b-a)/STEPS;
-    unsigned int T = get_num_threads();
+    unsigned int T = GetThreadCount();
     auto Vec = std::vector(T, partial_sum{0.0});
     std::vector<std::thread> Threads;
 

@@ -3,6 +3,7 @@
 #include <thread>
 #include <vector>
 #include <barrier>
+#include <type_traits>
 
 #include <new>
 
@@ -22,7 +23,6 @@ namespace std {
 
 #include "functions.cpp"
 #include "thread_utils.cpp"
-#include "reduction.cpp"
 
 struct partial_sum
 {
@@ -31,6 +31,7 @@ struct partial_sum
 
 #include "integration_cpp.cpp"
 #include "integration_omp.cpp"
+#include "reduction.cpp"
 
 struct experiment_result
 {
@@ -52,51 +53,46 @@ experiment_result RunExperiment(integrate_function I)
     return Result;
 }
 
-void ShowExperimentResult(integrate_function I)
+void ShowExperimentResult(integrate_function I, const char* Name)
 {
-    printf("%10s, %10s %10sms\n", "Threads", "Result", "TimeMS");
-    for(unsigned T = 1; T <= (unsigned)omp_get_num_procs(); T++)
+    printf("%s\n", Name);
+    SetThreadCount(1);
+
+    printf("%10s, %10s %10sms %14s\n", "Threads", "Result", "TimeMS", "Acceleration");
+    experiment_result Experiment;
+    Experiment = RunExperiment(I);
+    printf("%10d, %10g %10gms %14g\n", 1, Experiment.Result, Experiment.TimeMS, 1.0f);
+    double Time = Experiment.TimeMS; // TODO: rename
+
+    for(unsigned T = 2; T <=omp_get_num_procs(); T++)
     {
-        experiment_result Experiment;
-        omp_set_num_threads(T);
+        SetThreadCount(T);
         Experiment = RunExperiment(I);
-        printf("%10d, %10g %10gms\n", T, Experiment.Result, Experiment.TimeMS);
+        printf("%10d, %10g %10gms %14g\n", T, Experiment.Result, Experiment.TimeMS, Time/Experiment.TimeMS);
     }
     printf("\n");
 }
 
+#define SHOW_EXPERIMENT(fun) ShowExperimentResult((fun), (#fun))
+
 int main()
 {
-    unsigned V[16];
 #if 0
-    unsigned U[16];
-    unsigned W[16];
-#endif
-
-    set_num_threads(2);
-
+    SetThreadCount(2);
+    unsigned V[16];
     for(unsigned i = 0; i < std::size(V); i++)
         V[i] = i + 1;
-    std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
-
-#if 0
-    experiment_result Result = RunExperiment(IntegratePS);
-    printf("Partial sums: Result - %f, TimeMS - %f\n", Result.Result, Result.TimeMS);
-
-    printf("IntegratePS \n");
-    ShowExperimentResult(IntegratePS);
-
-    printf("IntegrateReduction\n");
-    ShowExperimentResult(IntegrateReductionOMP);
-
-
-#if 0
-    printf("IntegrateAlign\n");
-    ShowExperimentResult(IntegrateAlignOPM);
+    // std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
+    // std::cout << "Average: " << reduce_range(1, 16, 10000, Linear, [](auto x, auto y) {return x + y;}, 0) << '\n';
+    // std::cout << "sdakfj: " << IntegrateReduction(-1, 1, Quadratic) << '\n;
 #endif
 
-    printf("IntegrateFalseSharing\n");
-    ShowExperimentResult(IntegrateFalseSharingOMP);
+#if 1
+    SHOW_EXPERIMENT(IntegratePS);
+    SHOW_EXPERIMENT(IntegrateReductionOMP);
+    SHOW_EXPERIMENT(IntegrateFalseSharingOMP);
+    SHOW_EXPERIMENT(IntegrateParallelOMP);
+    SHOW_EXPERIMENT(IntegrateReduction);
 #endif
 
     return 0;
