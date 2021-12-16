@@ -13,7 +13,6 @@ ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, Eleme
     };
     static auto reduction_partial_results =
 
-        std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(),
         std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(), 
                                                 reduction_partial_result_t{zero});
     constexpr std::size_t k = 2;
@@ -43,6 +42,7 @@ ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, Eleme
 
         reduction_partial_results[t].value = accum;
 
+#if 0
         std::size_t s = 1;
         while(s < T)
         {
@@ -54,6 +54,15 @@ ElementType reduce_vector(const ElementType* V, std::size_t n, BinaryFn f, Eleme
                 s *= k;
             }
         }
+#else
+        for(std::size_t s = 1, s_next = 2; s < T; s = s_next, s_next += s_next) //TODO assume k = 2
+        {
+            bar.arrive_and_wait();
+            if(((t % s_next) == 0) && (t + s < T))
+                reduction_partial_results[t].value = f(reduction_partial_results[t].value,
+                                                       reduction_partial_results[t + s].value);
+        }
+#endif
     };
 
 

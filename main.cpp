@@ -77,14 +77,15 @@ void ShowExperimentResult(integrate_function I, const char* Name)
 
 int main()
 {
-#if 0
-    SetThreadCount(2);
+#if 1
+    SetThreadCount(4);
     unsigned V[16];
     for(unsigned i = 0; i < std::size(V); i++)
         V[i] = i + 1;
-    // std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
-    // std::cout << "Average: " << reduce_range(1, 16, 10000, Linear, [](auto x, auto y) {return x + y;}, 0) << '\n';
-    // std::cout << "sdakfj: " << IntegrateReduction(-1, 1, Quadratic) << '\n;
+     // std::cout << "as Average: " << '\n';
+     std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
+     // std::cout << "Average: " << reduce_range(1, 16, 10000, Linear, [](auto x, auto y) {return x + y;}, 0) << '\n';
+     // std::cout << "sdakfj: " << IntegrateReduction(-1, 1, Quadratic) << '\n;
 #endif
 
 #if 1

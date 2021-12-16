@@ -15,8 +15,6 @@
 
 // ct_assert(sizeof(partial_sum) == CACHE_LINE_SIZE);
 #endif
-
-typedef double (*function)(double);
 /*
 double IntegrateCppMutex(double a, double b, function F)
 {
@@ -51,7 +49,7 @@ double IntegrateCppMutex(double a, double b, function F)
 */
 
 #if 1
-double IntegratePS(function F, double a, double b)
+double IntegratePS(unary_function F, double a, double b)
 {
     double Result = 0;
     double dx = (b-a)/STEPS;

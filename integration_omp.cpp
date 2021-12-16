@@ -3,7 +3,7 @@
 #include <omp.h>
 #include <string.h>
 
-double IntegrateAlignOMP(function Function, double a, double b)
+double IntegrateAlignOMP(unary_function Function, double a, double b)
 {
     unsigned int T;
     double Result = 0;
@@ -16,8 +16,7 @@ double IntegrateAlignOMP(function Function, double a, double b)
 #pragma omp single
         {
             T = (unsigned int)omp_get_num_threads();
-            // TODO
-            Accum = 0; // (partial_sum*) aligned_alloc(CACHE_LINE_SIZE, T*sizeof(*Accum));
+            Accum = (partial_sum*) AllocateAlign(T*sizeof(*Accum), CACHE_LINE_SIZE);
             memset(Accum, 0, T*sizeof(*Accum));
         }
 
@@ -29,12 +28,12 @@ double IntegrateAlignOMP(function Function, double a, double b)
         Result += Accum[i].Value;
 
     Result *= dx;
-    free(Accum);
+    FreeAlign(Accum);
     return Result;
 }
 
 
-double IntegrateParallelOMP(function Function, double a, double b)
+double IntegrateParallelOMP(unary_function Function, double a, double b)
 {
     double Result = 0;
     double dx = (b-a)/STEPS;
@@ -54,7 +53,7 @@ double IntegrateParallelOMP(function Function, double a, double b)
     return Result;
 }
 
-double IntegrateFalseSharingOMP(function Function, double a, double b)
+double IntegrateFalseSharingOMP(unary_function Function, double a, double b)
 {
     unsigned int T;
     double Result = 0;
@@ -82,7 +81,7 @@ double IntegrateFalseSharingOMP(function Function, double a, double b)
     return Result;
 }
 
-double IntegrateReductionOMP(function Function, double a, double b)
+double IntegrateReductionOMP(unary_function Function, double a, double b)
 {
     double Result = 0;
     double dx = (b-a)/STEPS;
