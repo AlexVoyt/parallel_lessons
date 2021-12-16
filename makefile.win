@@ -1,2 +1,2 @@
 main:
-	cl /std:c++latest /EHsc /openmp /FC main.cpp
+	cl /std:c++latest /EHsc /openmp /FC /O2 main.cpp

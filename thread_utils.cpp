@@ -1,14 +1,13 @@
 // TODO: header guards
 
-static unsigned num_treads = std::thread::hardware_concurrency();
-unsigned get_num_threads()
+static unsigned ThreadCount = std::thread::hardware_concurrency();
+unsigned GetThreadCount()
 {
-    return num_treads;
+    return ThreadCount;
 }
 
-//TODO: omp set threads
-void set_num_threads(unsigned t)
+void SetThreadCount(unsigned t)
 {
-    num_treads = t;
+    ThreadCount = t;
     omp_set_num_threads(t);
 }
