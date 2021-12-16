@@ -2,13 +2,16 @@
 #include <cstdlib>
 #include <thread>
 #include <vector>
+#include <barrier>
+
+#include <new>
 
 /* Compile time assert macro */
 #define ASSERT_CONCAT_(a,b) a##b
 #define ASSERT_CONCAT(a,b) ASSERT_CONCAT_(a,b)
 #define ct_assert(e) enum {ASSERT_CONCAT(asssert_line_, __LINE__) = 1/(!!(e))}
 
-#if defined(__GNUC__) && __GNUC__ <= 10
+#if defined(__GNUC__)
 namespace std {
     constexpr std::size_t hardware_constructive_interference_size = 64u;
     constexpr std::size_t hardware_destructive_interference_size = 64u;
@@ -52,7 +55,7 @@ experiment_result RunExperiment(integrate_function I)
 void ShowExperimentResult(integrate_function I)
 {
     printf("%10s, %10s %10sms\n", "Threads", "Result", "TimeMS");
-    for(unsigned T = 1; T <=omp_get_num_procs(); T++)
+    for(unsigned T = 1; T <= (unsigned)omp_get_num_procs(); T++)
     {
         experiment_result Experiment;
         omp_set_num_threads(T);
@@ -65,19 +68,22 @@ void ShowExperimentResult(integrate_function I)
 int main()
 {
     unsigned V[16];
+#if 0
     unsigned U[16];
     unsigned W[16];
+#endif
 
-    set_num_threads(1);
+    set_num_threads(2);
 
     for(unsigned i = 0; i < std::size(V); i++)
         V[i] = i + 1;
     std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
 
-#if 1
+#if 0
     experiment_result Result = RunExperiment(IntegratePS);
     printf("Partial sums: Result - %f, TimeMS - %f\n", Result.Result, Result.TimeMS);
-    printf("IntegratePS\n");
+
+    printf("IntegratePS \n");
     ShowExperimentResult(IntegratePS);
 
     printf("IntegrateReduction\n");
