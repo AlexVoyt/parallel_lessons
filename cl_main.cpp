@@ -9,11 +9,6 @@
 #include "functions.cpp"
 #include "thread_utils.cpp"
 
-namespace std {
-    constexpr std::size_t hardware_constructive_interference_size = 64u;
-    constexpr std::size_t hardware_destructive_interference_size = 64u;
-}
-
 struct partial_sum
 {
     alignas(64) double Value;
@@ -34,7 +29,7 @@ void Free(void* Memory)
 
 void* AllocateAlign(size_t Size, size_t Alignment)
 {
-    void* Result = aligned_alloc(Alignment, Size);
+    void* Result = _aligned_malloc(Size, Alignment);
     assert(Result);
 
     return Result;
@@ -42,7 +37,7 @@ void* AllocateAlign(size_t Size, size_t Alignment)
 
 void FreeAlign(void* Memory)
 {
-    free(Memory);
+    _aligned_free(Memory);
 }
 
 #include "integration_cpp.cpp"
@@ -53,17 +48,6 @@ void FreeAlign(void* Memory)
 
 int main()
 {
-#if 0
-    SetThreadCount(4);
-    unsigned V[16];
-    for(unsigned i = 0; i < std::size(V); i++)
-        V[i] = i + 1;
-     // std::cout << "as Average: " << '\n';
-     std::cout << "Average: " << reduce_vector(V, std::size(V), [](auto x, auto y) {return x + y;}, 0u)/ std::size(V) << '\n';
-     // std::cout << "Average: " << reduce_range(1, 16, 10000, Linear, [](auto x, auto y) {return x + y;}, 0) << '\n';
-     // std::cout << "sdakfj: " << IntegrateReduction(-1, 1, Quadratic) << '\n;
-#endif
-
 #if 1
     SHOW_EXPERIMENT(IntegratePS);
     SHOW_EXPERIMENT(IntegrateReductionOMP);
@@ -75,4 +59,5 @@ int main()
 
     return 0;
 }
+
 

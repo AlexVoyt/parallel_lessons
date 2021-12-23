@@ -1,6 +1,7 @@
 main.obj
 main.exe
 cl_main.exe
+cl_main.obj
 gcc_main
 *.swp
 main
