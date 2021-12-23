@@ -1,5 +1,7 @@
 main.obj
 main.exe
+cl_main.exe
+gcc_main
 *.swp
 main
 *un~
