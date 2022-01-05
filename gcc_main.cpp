@@ -4,7 +4,13 @@
 #include <vector>
 #include <barrier>
 #include <type_traits>
+#include <stdint.h>
 #include <assert.h>
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
 #include "functions.cpp"
 #include "thread_utils.cpp"
@@ -49,7 +55,7 @@ void FreeAlign(void* Memory)
 #include "integration_omp.cpp"
 #include "reduction.cpp"
 #include "experiment.cpp"
-
+#include "random_generator.cpp"
 
 int main()
 {
@@ -64,14 +70,25 @@ int main()
      // std::cout << "sdakfj: " << IntegrateReduction(-1, 1, Quadratic) << '\n;
 #endif
 
-#if 1
+#if 0
     SHOW_EXPERIMENT(IntegratePS);
     SHOW_EXPERIMENT(IntegrateReductionOMP);
     SHOW_EXPERIMENT(IntegrateFalseSharingOMP);
     SHOW_EXPERIMENT(IntegrateParallelOMP);
     SHOW_EXPERIMENT(IntegrateAlignOMP);
-#endif
     SHOW_EXPERIMENT(IntegrateReduction);
+#endif
+
+    u32 ArrayLength = 10;
+    u32 Array[ArrayLength];
+    u64 Seed = 102;
+    RandomizeArray(Seed, (u32 *)&Array, ArrayLength, 1, 255);
+
+    for(u32 I = 0; I < ArrayLength; I++)
+    {
+        printf("%d ", Array[I]);
+    }
+    printf("\n");
 
     return 0;
 }
