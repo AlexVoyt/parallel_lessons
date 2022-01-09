@@ -7,48 +7,42 @@
 #define STEPS 100000000
 #define CACHE_LINE_SIZE 64u
 
-/* Compile time assert macro */
-#if 1
-#define ASSERT_CONCAT_(a,b) a##b
-#define ASSERT_CONCAT(a,b) ASSERT_CONCAT_(a,b)
-#define ct_assert(e) enum {ASSERT_CONCAT(asssert_line_, __LINE__) = 1/(!!(e))}
 
-// ct_assert(sizeof(partial_sum) == CACHE_LINE_SIZE);
-#endif
-/*
-double IntegrateCppMutex(double a, double b, function F)
+double IntegrateMutex(unary_function F, double a, double b)
 {
     using namespace std;
     vector<thread> Threads;
     mutex Mutex;
-    unsigned int T = thread::hardware_concurrency();
+    unsigned int T = GetThreadCount();
     double dx = (b-a)/STEPS;
     double Result = 0;
 
-    for(unsigned int t = 0; t < T; t++)
+    auto ThreadProcedure = [=, &Result, &Mutex](auto t)
     {
-        Threads.emplace_back([=, &Result, &Mutex](){
-            double Accum = 0;
-            for(unsigned int i = t; i < STEPS; i+=T)
-                Accum += Function(dx*i + a);
-
-        }
-    }
-
-    {
-        unsigned int t = (unsigned int)omp_get_thread_num();
-        unsigned int T = (unsigned int)omp_get_num_threads();
+        double Accum = 0;
         for(unsigned int i = t; i < STEPS; i+=T)
-#pragma omp critical
+        {
+            Accum += F(dx*i + a);
+        }
+        Mutex.lock();
         Result += Accum;
+        Mutex.unlock();
+    };
+
+    for(unsigned int t = 1; t < T; t++)
+    {
+        Threads.emplace_back(ThreadProcedure, t);
     }
+
+    ThreadProcedure(0);
+    for(auto &Thread : Threads)
+        Thread.join();
 
     Result *= dx;
     return Result;
 }
-*/
 
-#if 1
+
 double IntegratePS(unary_function F, double a, double b)
 {
     double Result = 0;
@@ -76,4 +70,3 @@ double IntegratePS(unary_function F, double a, double b)
     Result *= dx;
     return Result;
 }
-#endif

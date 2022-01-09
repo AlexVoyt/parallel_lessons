@@ -1,1 +1,1 @@
-cl /std:c++latest /EHsc /openmp /FC /O2 cl_main.cpp
+cl /std:c++latest /Zi /EHsc /openmp /FC /Od cl_main.cpp

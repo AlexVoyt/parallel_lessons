@@ -6,3 +6,6 @@ gcc_main
 *.swp
 main
 *un~
+.vs
+*.pdb
+*.ilk
