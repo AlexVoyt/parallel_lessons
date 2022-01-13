@@ -81,6 +81,28 @@ double IntegrateFalseSharingOMP(unary_function Function, double a, double b)
     return Result;
 }
 
+double IntegrateAtomicOMP(unary_function Function, double a, double b)
+{
+    double Result = 0;
+    double dx = (b-a)/STEPS;
+
+#pragma omp parallel
+    {
+        unsigned int t = (unsigned int)omp_get_thread_num();
+        unsigned int T = (unsigned int)omp_get_num_threads();
+        double Accum = 0;
+        for(int i = t; i < STEPS; i += T)
+        {
+            Accum += Function(dx*i + a);
+        }
+#pragma omp atomic
+        Result += Accum;
+    }
+
+    Result *= dx;
+    return Result;
+}
+
 double IntegrateReductionOMP(unary_function Function, double a, double b)
 {
     double Result = 0;

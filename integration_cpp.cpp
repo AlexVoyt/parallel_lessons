@@ -42,6 +42,36 @@ double IntegrateMutex(unary_function F, double a, double b)
     return Result;
 }
 
+double IntegrateAtomic(unary_function F, double a, double b)
+{
+    std::vector<std::thread> Threads;
+    std::atomic<double> Result;
+    unsigned int T = GetThreadCount();
+    double dx = (b-a)/STEPS;
+
+    auto ThreadProcedure = [=, &Result](auto t)
+    {
+        double Accum = 0;
+        for(unsigned int i = t; i < STEPS; i+=T)
+        {
+            Accum += F(dx*i + a);
+        }
+        Result += Accum;
+    };
+
+    for(unsigned int t = 1; t < T; t++)
+    {
+        Threads.emplace_back(ThreadProcedure, t);
+    }
+
+    ThreadProcedure(0);
+    for(auto &Thread : Threads)
+        Thread.join();
+
+    Result = Result * dx;
+    return Result;
+}
+
 
 double IntegratePS(unary_function F, double a, double b)
 {

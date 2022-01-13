@@ -30,6 +30,77 @@ u64 Power(u64 Base, u64 Exponent)
     return Result;
 }
 
+double RandomizeArrayFalseSharing(u64 Seed, u32* Array, u32 ArrayLength, u32 Min, u32 Max)
+{
+    assert(Min <= Max);
+    u32 ThreadCount = GetThreadCount();
+    u64* GenerationStateTable = (u64* )Allocate(sizeof(*GenerationStateTable)*ThreadCount);
+
+    struct aligned_sum
+    {
+        alignas(GetCacheLineSize()) u64 Value;
+    };
+
+    aligned_sum* SumTable = (aligned_sum* )AllocateAlign(ThreadCount*sizeof(*SumTable), GetCacheLineSize());
+    for(u32 I = 0; I < ThreadCount; I++)
+    {
+        SumTable[I].Value = 0;
+    }
+
+    u64 A = 6364136223846793005;
+    u64 B = 1;
+
+    u64 PrevValue = Seed;
+    u64 Sum = 0;
+    for(u32 I = 0; I < ThreadCount; I++)
+    {
+        u64 NextValue = A*PrevValue + B;
+        GenerationStateTable[I] = NextValue;
+        Array[I] = (NextValue % (Max - Min + 1)) + Min;
+        PrevValue = NextValue;
+        Sum += Array[I];
+    }
+
+    u64 AT = Power(A, ThreadCount);
+    u64 BT = 0;
+    for(u32 I = 0; I < ThreadCount; I++)
+    {
+        BT += Power(A, I);
+    }
+    BT *= B;
+
+    auto ThreadProcedure = [=](unsigned ThreadIndex, u64 GenerationState)
+    {
+        u64 Sum = 0;
+        u64 PrevValue = GenerationState;
+        for(u32 I = ThreadIndex + ThreadCount; I < ArrayLength; I += ThreadCount)
+        {
+            u64 NextValue = AT*PrevValue + BT;
+            Array[I] = (NextValue % (Max - Min + 1)) + Min;
+            PrevValue = NextValue;
+            Sum += Array[I];
+        }
+
+        SumTable[ThreadIndex].Value += Sum;
+    };
+
+    std::vector<std::thread> Threads;
+    for(unsigned ThreadIndex = 1; ThreadIndex < ThreadCount; ThreadIndex++)
+        Threads.emplace_back(ThreadProcedure, ThreadIndex, GenerationStateTable[ThreadIndex]);
+    ThreadProcedure(0, GenerationStateTable[0]);
+    for(auto& Thread : Threads)
+        Thread.join();
+
+    for(u32 I = 0; I < ThreadCount; I++)
+    {
+        Sum += SumTable[I].Value;
+    }
+
+    Free(GenerationStateTable);
+    FreeAlign(SumTable);
+    return (double)Sum/(double)ArrayLength;
+}
+
 double RandomizeArray(u64 Seed, u32* Array, u32 ArrayLength, u32 Min, u32 Max)
 {
     assert(Min <= Max);
@@ -161,4 +232,3 @@ double RandomizeArray(u64 Seed, u32* Array, u32 ArrayLength, u32 Min, u32 Max)
 
     return (double)Sum/(double)ArrayLength;
 }
-
