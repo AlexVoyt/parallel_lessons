@@ -5,6 +5,7 @@ unsigned Fibonacci(unsigned n)
 	return Fibonacci(n - 1) + Fibonacci(n - 2);
 }
 
+#if 0
 unsigned Fibonacci_omp(unsigned n)
 {
 	if (n <= 2)
@@ -21,6 +22,7 @@ unsigned Fibonacci_omp(unsigned n)
 	#pragma omp taskwait
 	return x1 + x2;
 }
+#endif
 
 #include <chrono>
 #include <iostream>
@@ -54,5 +56,3 @@ int main(int argc, char** argv)
     //fib(Fibonacci_omp);
     fib(Fibonacci_queue);
 	return 0;
-}
-

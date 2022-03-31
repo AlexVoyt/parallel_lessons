@@ -10,3 +10,4 @@ main
 *.pdb
 *.ilk
 dynamic_planning/fib
+intrinsics/main

@@ -16,7 +16,6 @@ public:
 
     ~control_state_fib_async()
     {
-        ;
     }
 
     static std::shared_ptr<control_state_fib_async> create(unsigned* result_ptr,
