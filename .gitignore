@@ -9,3 +9,4 @@ main
 .vs
 *.pdb
 *.ilk
+dynamic_planning/fib
