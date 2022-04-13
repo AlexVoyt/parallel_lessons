@@ -1,7 +1,11 @@
 #include <stdio.h>
+#include <cstdlib>
 #include <assert.h>
 #include <emmintrin.h>
 #include <pmmintrin.h>
+#include <stdint.h>
+
+typedef uint32_t u32;
 
 double Integrate(double a, double b, unsigned n)
 {
@@ -25,14 +29,63 @@ double Integrate(double a, double b, unsigned n)
     return Result;
 }
 
-void AddMatrix(const double* A, const double* B, std::size_t C, std::size_t R, double* Result)
+void AddMatrixSSE(const double* A, const double* B, std::size_t C, std::size_t R, double* Result)
 {
     assert(C % 8 == 0);
     assert(R % 8 == 0);
+
+    u32 ElementsInRegister = sizeof(__m128d)/sizeof(double);
+    assert(ElementsInRegister == 2);
+    u32 Iterations = C*R/ElementsInRegister;
+
+    for(u32 I = 0; I < Iterations; I++)
+    {
+        __m128d ATerm = _mm_load_pd(A);
+        __m128d BTerm = _mm_load_pd(B);
+        __m128d Sum = _mm_add_pd(ATerm, BTerm);
+        _mm_storeu_pd(Result, Sum);
+
+        A += ElementsInRegister;
+        B += ElementsInRegister;
+        Result += ElementsInRegister;
+    }
+
+}
+
+void Print(const double* A, u32 C, u32 R)
+{
+    for(u32 Y = 0; Y < R; Y++)
+    {
+        for(u32 X = 0; X < C; X++)
+        {
+            printf("%f ", A[Y * C + X]);
+        }
+        printf("\n");
+    }
 }
 
 int main()
 {
-    double Res = Integrate(1, 5, 100000);
+    double IntRes = Integrate(-1, 1, 1000000);
+    printf("%f\n", IntRes);
+
+    u32 C = 8;
+    u32 R = 16;
+    double* A = (double* )malloc(C * R * sizeof(double));
+    for(u32 I = 0; I < C * R; I++)
+    {
+        A[I] = I + 20;
+    }
+    // Print(A, C, R);
+
+    double* B = (double* )malloc(C * R * sizeof(double));
+    for(u32 I = 0; I < C * R; I++)
+    {
+        B[I] = I + 30;
+    }
+    double* Res = (double* )malloc(C * R * sizeof(double));
+
+    AddMatrixSSE(A, B, C, R, Res);
+    Print(Res, C, R);
     return 0;
 }
