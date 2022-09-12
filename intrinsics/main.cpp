@@ -40,8 +40,8 @@ void AddMatrixSSE(const double* A, const double* B, std::size_t C, std::size_t R
 
     for(u32 I = 0; I < Iterations; I++)
     {
-        __m128d ATerm = _mm_load_pd(A);
-        __m128d BTerm = _mm_load_pd(B);
+        __m128d ATerm = _mm_loadu_pd(A);
+        __m128d BTerm = _mm_loadu_pd(B);
         __m128d Sum = _mm_add_pd(ATerm, BTerm);
         _mm_storeu_pd(Result, Sum);
 
@@ -50,6 +50,30 @@ void AddMatrixSSE(const double* A, const double* B, std::size_t C, std::size_t R
         Result += ElementsInRegister;
     }
 
+}
+
+void
+MulMatrixSSE(const double* A, const double* B,
+             std::size_t rA, std::size_t cA,
+             std::size_t cB, double* Result)
+{
+    assert(rA % 2 == 0);
+    auto rB = cA;
+
+    for(auto i = 0; i < rA; i+=4)
+    {
+        for(auto j = 0; j < cB; j ++)
+        {
+            auto tempRes = _mm_setzero_pd();
+            for (int k = 0; k < cA; k++)
+            {
+                auto tempA = _mm_loadu_pd(&A[k*rA+i]);
+                auto tempB = _mm_set1_pd(B[j*rB+k]);
+                tempRes = _mm_add_pd(_mm_mul_pd(tempA, tempB), tempRes);
+            }
+            _mm_storeu_pd(&Result[j*rA+i], tempRes);
+        }
+    }
 }
 
 void Print(const double* A, u32 C, u32 R)
@@ -66,8 +90,10 @@ void Print(const double* A, u32 C, u32 R)
 
 int main()
 {
+#if 0
     double IntRes = Integrate(-1, 1, 1000000);
     printf("%f\n", IntRes);
+#endif
 
     u32 C = 8;
     u32 R = 16;
